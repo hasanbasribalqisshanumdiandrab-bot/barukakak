@@ -1,0 +1,36 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>Masuk · Cari Jawaban Soal</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#e8ecf8;font:16px/1.6 system-ui;min-height:100svh;display:grid;place-items:center;padding:24px}main{width:min(460px,100%);padding:30px;border:1px solid #33405e;border-radius:22px;background:#121936}h1{font-size:28px;margin:0 0 8px}p,small{color:#a9b6d4}label{display:block;margin:18px 0 5px}input,button{font:inherit;padding:12px;border-radius:10px;width:100%;border:1px solid #465577}input{background:#0b1020;color:inherit}button{cursor:pointer;background:#55d0d8;color:#082329;font-weight:700;margin-top:16px}button.secondary{background:transparent;color:#d5dcf2}button:disabled{opacity:.5;cursor:wait}[hidden]{display:none!important}#message{white-space:pre-wrap}#qr{width:230px;max-width:100%;background:white;padding:10px;border-radius:12px}a{color:#55d0d8}a.btn{display:block;text-align:center;text-decoration:none;background:#55d0d8;color:#082329;font-weight:700;padding:12px;border-radius:10px;margin-top:12px}#secret{font-family:ui-monospace,monospace;letter-spacing:1px;text-align:center}.box{border:1px dashed #465577;border-radius:14px;padding:14px;margin:14px 0}</style></head><body><main>
+<h1>Cari Jawaban Soal</h1><p>Masuk dengan email yang diizinkan dan kode Google Authenticator.</p>
+<form id="account"><label for="email">Username / alamat email</label><input id="email" type="email" required autocomplete="username" autocapitalize="none" spellcheck="false"><label for="loginCode">Kata sandi — kode Google Authenticator</label><input id="loginCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" aria-describedby="codeHelp" required><small id="codeHelp">Masukkan 6 angka yang sedang tampil untuk akun Cari Jawaban Soal di Google Authenticator.</small><button id="login" type="submit">Masuk</button><button id="signup" class="secondary" type="button">Pemasangan awal — akun baru</button><button id="existing" class="secondary" type="button">Pemasangan — email sudah terdaftar</button><small>Belum memasang Authenticator? Isi email lalu pilih pemasangan. Buka tautan konfirmasi di email, lalu pasang Authenticator (pindai QR, atau di HP yang sama ketuk tombol "Buka di Google Authenticator"), dan verifikasi kode 6 angka. Kode tidak diperlukan untuk meminta tautan pemasangan.</small></form>
+<form id="mfa" hidden>
+<div id="enroll" hidden>
+<p>Pasang akun di Google Authenticator dengan salah satu cara:</p>
+<div class="box"><b>A. Di HP yang sama (paling mudah)</b><p style="margin:6px 0 0">Ketuk tombol ini, Authenticator akan terbuka dan akun otomatis ditambahkan.</p><a id="openApp" class="btn" href="#" hidden>Buka di Google Authenticator</a></div>
+<div class="box"><b>B. Pindai QR dari perangkat lain</b><p style="margin:6px 0 10px">Buka halaman ini di laptop/HP lain, lalu pindai dari Authenticator (+ → Pindai kode QR).</p><img id="qr" alt="QR pemasangan Google Authenticator"></div>
+<div class="box"><b>C. Masukkan kunci penyiapan</b><p style="margin:6px 0 10px">Di Authenticator: + → Masukkan kunci penyiapan → isi nama akun bebas, lalu tempel kunci ini (jenis: berbasis waktu).</p><input id="secret" readonly hidden aria-label="Kunci penyiapan"><button id="copy" class="secondary" type="button" hidden>Salin kunci</button></div>
+</div>
+<label for="code">Kode Google Authenticator</label><input id="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required><button type="submit">Verifikasi dan masuk</button><button id="back" class="secondary" type="button">Kembali ke login</button></form><p id="message" role="status" aria-live="polite"></p>
+</main><script>
+const $=id=>document.getElementById(id);let busy=false;
+async function call(body){let r;try{r=await fetch('/api/access',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})}catch{throw Error('Tidak bisa terhubung ke server. Cek koneksi internet.')}
+const t=await r.text();let d;try{d=JSON.parse(t)}catch{throw Error('Server /api/access tidak ditemukan (HTTP '+r.status+'). Situs harus di-deploy di Netlify beserta netlify.toml dan folder netlify/functions, bukan GitHub Pages.')}
+if(!r.ok)throw Error(d.error||'Permintaan gagal.');return d}
+async function task(fn){if(busy)return;busy=true;document.querySelectorAll('button').forEach(b=>b.disabled=true);$('message').textContent='Memproses…';try{await fn()}catch(e){$('message').textContent=e.message}finally{busy=false;document.querySelectorAll('button').forEach(b=>b.disabled=false)}}
+function secretFrom(d){if(d.secret)return String(d.secret);const u=d.uri||d.otpauth||d.otpauth_uri||'';const m=/[?&]secret=([^&]+)/i.exec(u);return m?decodeURIComponent(m[1]):''}
+async function mfa(){const d=await call({action:'setup'});$('account').hidden=true;$('mfa').hidden=false;$('enroll').hidden=d.enrolled;
+if(!d.enrolled){
+const uri=d.uri||d.otpauth||d.otpauth_uri||'';const secret=secretFrom(d);
+if(d.qr)$('qr').src=d.qr;
+if(uri){$('openApp').href=uri;$('openApp').hidden=false}
+if(secret){$('secret').value=secret;$('secret').hidden=false;$('copy').hidden=false}
+}
+$('message').textContent=d.enrolled?'Masukkan kode yang tampil di Google Authenticator.':'Pasang Authenticator, lalu masukkan kode 6 angka untuk mengonfirmasi.';$('code').focus()}
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('secret').value);$('message').textContent='Kunci disalin. Tempel di Authenticator.'}catch{$('secret').select();$('message').textContent='Tahan dan salin kunci secara manual.'}};
+$('account').onsubmit=e=>{e.preventDefault();task(async()=>{await call({action:'otp-login',email:$('email').value,code:$('loginCode').value});$('loginCode').value='';location.href='/app'})};
+function enroll(action){if(!$('email').reportValidity())return;task(async()=>{$('message').textContent=(await call({action,email:$('email').value})).message})}
+$('signup').onclick=()=>enroll('signup');
+$('existing').onclick=()=>enroll('recovery');
+$('mfa').onsubmit=e=>{e.preventDefault();task(async()=>{await call({action:'verify',code:$('code').value});location.href='/app'})};
+$('back').onclick=()=>task(async()=>{await call({action:'logout'});location.href='/'});
+task(async()=>{const fragment=new URLSearchParams(location.hash.slice(1));const recovery=fragment.get('recovery_token');const token=fragment.get('confirmation_token')||recovery;if(token){history.replaceState(null,'',location.pathname);await call({action:recovery?'recover':'confirm',token});await mfa();return}if((await call({action:'status'})).ok){location.replace('/app');return}$('message').textContent=''});
+</script></body></html>

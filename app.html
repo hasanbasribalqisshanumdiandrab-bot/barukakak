@@ -1,0 +1,5 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cari Jawaban Soal</title>
+<style>body{margin:0;background:#0b1020;color:#e8ecf8;font:16px/1.6 system-ui;min-height:100svh;display:grid;place-items:center;padding:24px}main{width:min(560px,100%);padding:30px;border:1px solid #33405e;border-radius:22px;background:#121936}button{font:inherit;padding:12px;border-radius:10px;border:1px solid #465577;background:transparent;color:#d5dcf2;cursor:pointer}</style></head><body><main>
+<h1>Berhasil masuk</h1><p>Ini halaman contoh. Ganti isi file <code>private/app.html</code> dengan halaman Cari Jawaban Soal Anda.</p>
+<button id="out">Keluar</button></main>
+<script>document.getElementById('out').onclick=async()=>{await fetch('/api/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})});location.href='/'}</script></body></html>

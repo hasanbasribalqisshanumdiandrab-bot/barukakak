@@ -1,0 +1,19 @@
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  included_files = ["private/**"]
+
+[[redirects]]
+  from = "/api/access"
+  to = "/.netlify/functions/access"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/app"
+  to = "/.netlify/functions/app"
+  status = 200
+  force = true
